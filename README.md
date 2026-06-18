@@ -1,4 +1,4 @@
-# SV Enkenbach – Trainer-Tool
+# Trainer-Tool
 
 Internes Tool für das Trainerteam: Übungen/Taktiken auf einem Spielfeld
 zeichnen, animieren, in einer Bibliothek verwalten, als Video/GIF exportieren
