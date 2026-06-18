@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sve-trainer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sve_trainer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: sve_trainer
+    volumes:
+      - sve_trainer_db_data:/var/lib/postgresql/data
+    networks:
+      - sve-trainer-net
+    # Port bewusst NICHT nach außen veröffentlicht — nur intern für backend/worker erreichbar
+
+  backend:
+    build: ./backend
+    container_name: sve-trainer-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+    networks:
+      - sve-trainer-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sve-trainer-api.rule=Host(`${API_HOSTNAME:-trainer-api.example.de}`)"
+      - "traefik.http.routers.sve-trainer-api.entrypoints=websecure"
+      - "traefik.http.routers.sve-trainer-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sve-trainer-api.loadbalancer.server.port=4000"
+
+  frontend:
+    build: ./frontend
+    container_name: sve-trainer-frontend
+    restart: unless-stopped
+    networks:
+      - sve-trainer-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sve-trainer-app.rule=Host(`${APP_HOSTNAME:-trainer.example.de}`)"
+      - "traefik.http.routers.sve-trainer-app.entrypoints=websecure"
+      - "traefik.http.routers.sve-trainer-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sve-trainer-app.loadbalancer.server.port=80"
+
+  redis:
+    image: redis:7-alpine
+    container_name: sve-trainer-redis
+    restart: unless-stopped
+    networks:
+      - sve-trainer-net
+
+  # Export-Worker (Puppeteer + FFmpeg) — folgt in einem späteren Schritt.
+  # Hier bereits als Platzhalter vorgesehen, damit die Netzwerk-Topologie steht.
+  # worker:
+  #   build: ./worker
+  #   container_name: sve-trainer-worker
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - sve-trainer-net
+  #   volumes:
+  #     - sve_trainer_exports:/data/exports
+
+networks:
+  sve-trainer-net:
+    driver: bridge
+  # Falls Traefik in einem separaten externen Netzwerk läuft (üblich bei
+  # bestehenden Setups), hier stattdessen:
+  # traefik-public:
+  #   external: true
+
+volumes:
+  sve_trainer_db_data:
+  # sve_trainer_exports:
