@@ -36,6 +36,18 @@ function getInitialEditorState(initialTemplate) {
   return { objects, keyframes };
 }
 
+function getInitialExerciseId(initialTemplate) {
+  if (initialTemplate?.id != null) {
+    return initialTemplate.id;
+  }
+
+  if (initialTemplate?.source?.type === 'local-backend') {
+    return initialTemplate.source.externalId ?? initialTemplate.source.sourceKey ?? null;
+  }
+
+  return null;
+}
+
 function resolveReferenceImage(meta = {}) {
   // Referenzbilder stammen entweder direkt aus thumbnailUrl oder werden
   // aus thumbnailKey + konfigurierbarer Base-URL zusammengesetzt.
@@ -93,6 +105,7 @@ async function createEditorThumbnail(stage) {
 export default function Editor({ initialTemplate = null }) {
   const navigate = useNavigate();
   const initialState = getInitialEditorState(initialTemplate);
+  const initialExerciseId = getInitialExerciseId(initialTemplate);
   const initialMeta = initialTemplate?.meta ?? {};
   const initialFieldTemplate = initialTemplate?.editor?.fieldTemplate ?? 'vollfeld_hoch';
   const referenceImageUrl = resolveReferenceImage(initialMeta);
@@ -106,7 +119,7 @@ export default function Editor({ initialTemplate = null }) {
   const [objects, setObjects]         = useState(initialState.objects);
   const [keyframes, setKeyframes]     = useState(initialState.keyframes);
   const [activeFrame, setActiveFrame] = useState(0);
-  const [exerciseId, setExerciseId]   = useState(initialTemplate?.id ?? null);
+  const [exerciseId, setExerciseId]   = useState(initialExerciseId);
   const [title, setTitle]             = useState(initialMeta.title ?? '');
   const [description, setDescription] = useState(initialMeta.description ?? initialMeta.summary ?? '');
   const [ageGroup, setAgeGroup]       = useState(initialMeta.ageGroups?.[0] ?? '');
@@ -475,6 +488,9 @@ export default function Editor({ initialTemplate = null }) {
         ? await updateExercise(exerciseId, payload)
         : await createExercise(payload);
 
+      // Nach dem ersten erfolgreichen POST merkt sich der Editor die neue
+      // Backend-ID. Alle weiteren Saves derselben Sitzung laufen dadurch
+      // automatisch ueber PUT statt erneut neue Uebungen anzulegen.
       setExerciseId(savedExercise.id);
       setSaveMessage(exerciseId ? 'Änderungen gespeichert.' : 'Übung gespeichert.');
     } catch (error) {

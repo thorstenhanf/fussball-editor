@@ -14,6 +14,20 @@ function createEmptyChoreography() {
   };
 }
 
+function normalizeChoreography(value) {
+  if (!value) {
+    return createEmptyChoreography();
+  }
+
+  return {
+    objects: Array.isArray(value.objects) ? value.objects : [],
+    keyframes:
+      Array.isArray(value.keyframes) && value.keyframes.length > 0
+        ? value.keyframes
+        : createEmptyChoreography().keyframes,
+  };
+}
+
 function normalizeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
@@ -77,15 +91,7 @@ export function createExerciseTemplate(overrides = {}) {
       ...baseTemplate.editor,
       ...overrides.editor,
     },
-    choreography: overrides.choreography
-      ? {
-          objects: Array.isArray(overrides.choreography.objects) ? overrides.choreography.objects : [],
-          keyframes:
-            Array.isArray(overrides.choreography.keyframes) && overrides.choreography.keyframes.length > 0
-              ? overrides.choreography.keyframes
-              : createEmptyChoreography().keyframes,
-        }
-      : baseTemplate.choreography,
+    choreography: normalizeChoreography(overrides.choreography ?? baseTemplate.choreography),
   };
 }
 
@@ -95,6 +101,9 @@ export function createExerciseTemplate(overrides = {}) {
  * until a dedicated PDF/diagram import exists.
  */
 export function mapSearchResultToExerciseTemplate(searchResult = {}) {
+  // Importierte Suchtreffer koennen optional einen KI-generierten
+  // choreography_draft mitliefern. Falls vorhanden, wird dieser direkt als
+  // initialer Editor-Startzustand uebernommen; ansonsten bleibt die Uebung leer.
   return createExerciseTemplate({
     source: {
       type: 'external-search',
@@ -118,7 +127,7 @@ export function mapSearchResultToExerciseTemplate(searchResult = {}) {
     editor: {
       fieldTemplate: inferFieldTemplate(searchResult),
     },
-    choreography: createEmptyChoreography(),
+    choreography: searchResult.choreography_draft ?? createEmptyChoreography(),
   });
 }
 
