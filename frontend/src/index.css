@@ -632,6 +632,11 @@ body {
   opacity: 0.7;
 }
 
+.library-search-button-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
 .library-results-meta {
   margin: 0 0 16px;
   color: #475569;

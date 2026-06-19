@@ -38,13 +38,14 @@ function getThumbnailUrl(exercise) {
 export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const hasQueryParam = searchParams.has('q');
   const initialQuery = searchParams.get('q') ?? '';
 
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [hasSearched, setHasSearched] = useState(Boolean(initialQuery));
+  const [hasSearched, setHasSearched] = useState(hasQueryParam);
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -52,7 +53,7 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
 
   useEffect(() => {
     const trimmedQuery = initialQuery.trim();
-    if (!trimmedQuery) {
+    if (!hasQueryParam) {
       setResults([]);
       setLoading(false);
       setError('');
@@ -68,7 +69,8 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
       setHasSearched(true);
 
       try {
-        const response = await fetch(`${EXERCISE_SEARCH_API}?q=${encodeURIComponent(trimmedQuery)}`, {
+        const queryString = hasQueryParam ? `?q=${encodeURIComponent(trimmedQuery)}` : '';
+        const response = await fetch(`${EXERCISE_SEARCH_API}${queryString}`, {
           signal: controller.signal,
         });
 
@@ -92,21 +94,11 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
     loadExercises();
 
     return () => controller.abort();
-  }, [initialQuery]);
+  }, [hasQueryParam, initialQuery]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const trimmedQuery = query.trim();
-
-    if (!trimmedQuery) {
-      setSearchParams({});
-      setResults([]);
-      setError('');
-      setHasSearched(false);
-      return;
-    }
-
-    setSearchParams({ q: trimmedQuery });
+    setSearchParams({ q: query.trim() });
   };
 
   const handleOpenInEditor = (exercise) => {
@@ -141,6 +133,14 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
             />
             <button className="library-search-button" type="submit" disabled={loading}>
               {loading ? 'Suche läuft...' : 'Suchen'}
+            </button>
+            <button
+              className="library-search-button library-search-button-secondary"
+              type="button"
+              onClick={() => setSearchParams({ q: '' })}
+              disabled={loading}
+            >
+              Alle anzeigen
             </button>
           </div>
         </form>
