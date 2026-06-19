@@ -71,6 +71,11 @@ body {
   font-weight: 600;
 }
 
+.app-nav-button {
+  font: inherit;
+  cursor: pointer;
+}
+
 .app-nav-link.active {
   background: #14532d;
   color: #ffffff;
@@ -665,6 +670,50 @@ body {
 .library-search-button-secondary {
   background: #e2e8f0;
   color: #0f172a;
+}
+
+.login-page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.login-card {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.login-card h2 {
+  margin: 0 0 8px;
+}
+
+.login-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.login-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  font: inherit;
+}
+
+.login-submit {
+  min-height: 48px;
 }
 
 .pdf-upload-panel {
