@@ -6,6 +6,8 @@ import PlacedObject from './PlacedObject';
 import PropertiesPanel from './PropertiesPanel';
 import Timeline from './Timeline';
 import FieldVollfeldHoch from './FieldVollfeldHoch';
+import { createExercise, updateExercise } from '../../lib/exerciseApi';
+import { buildExercisePayload } from '../../lib/exercisePersistence';
 
 const FELD_BREITE  = 680;
 const FELD_HOEHE   = 1050;
@@ -37,10 +39,23 @@ const STANDARD_TOOL_OPTIONS = {
 
 export default function Editor({ initialTemplate = null }) {
   const initialState = getInitialEditorState(initialTemplate);
+  const initialMeta = initialTemplate?.meta ?? {};
+  const initialFieldTemplate = initialTemplate?.editor?.fieldTemplate ?? 'vollfeld_hoch';
 
   const [objects, setObjects]         = useState(initialState.objects);
   const [keyframes, setKeyframes]     = useState(initialState.keyframes);
   const [activeFrame, setActiveFrame] = useState(0);
+  const [exerciseId, setExerciseId]   = useState(initialTemplate?.id ?? null);
+  const [title, setTitle]             = useState(initialMeta.title ?? '');
+  const [description, setDescription] = useState(initialMeta.description ?? initialMeta.summary ?? '');
+  const [ageGroup, setAgeGroup]       = useState(initialMeta.ageGroups?.[0] ?? '');
+  const [durationMinutes, setDurationMinutes] = useState(
+    initialMeta.durationMinutes == null ? '' : String(initialMeta.durationMinutes)
+  );
+  const [fieldTemplate]               = useState(initialFieldTemplate);
+  const [isSaving, setIsSaving]       = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveError, setSaveError]     = useState('');
 
   const [activeTool, setActiveTool]             = useState('select');
   const [pickerOpen, setPickerOpen]             = useState(null);
@@ -266,6 +281,43 @@ export default function Editor({ initialTemplate = null }) {
 
   useEffect(() => () => cancelAnimationFrame(animRef.current), []);
 
+  const handleSave = async () => {
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      setSaveError('Bitte zuerst einen Titel eingeben.');
+      setSaveMessage('');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError('');
+    setSaveMessage('');
+
+    const payload = buildExercisePayload({
+      title: trimmedTitle,
+      description,
+      ageGroup,
+      durationMinutes,
+      fieldTemplate,
+      objects,
+      keyframes,
+    });
+
+    try {
+      const savedExercise = exerciseId
+        ? await updateExercise(exerciseId, payload)
+        : await createExercise(payload);
+
+      setExerciseId(savedExercise.id);
+      setSaveMessage(exerciseId ? 'Änderungen gespeichert.' : 'Übung gespeichert.');
+    } catch (error) {
+      setSaveError(error.message || 'Speichern fehlgeschlagen.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const positionenZumRenderr = livePositions ?? keyframes[activeFrame]?.positions ?? {};
 
   // Ausgewähltes Objekt für das PropertiesPanel
@@ -280,6 +332,51 @@ export default function Editor({ initialTemplate = null }) {
 
   return (
     <div className="editor-layout">
+      <div className="editor-document-bar">
+        <div className="editor-document-fields">
+          <input
+            className="editor-document-title"
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Titel der Übung"
+          />
+          <input
+            className="editor-document-meta"
+            type="text"
+            value={ageGroup}
+            onChange={(event) => setAgeGroup(event.target.value)}
+            placeholder="Altersklasse"
+          />
+          <input
+            className="editor-document-meta"
+            type="number"
+            min="0"
+            value={durationMinutes}
+            onChange={(event) => setDurationMinutes(event.target.value)}
+            placeholder="Dauer (Min.)"
+          />
+        </div>
+
+        <div className="editor-document-actions">
+          {saveError && <span className="editor-save-state editor-save-state-error">{saveError}</span>}
+          {!saveError && saveMessage && <span className="editor-save-state">{saveMessage}</span>}
+          <button className="editor-save-button" type="button" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Speichert...' : 'Speichern'}
+          </button>
+        </div>
+      </div>
+
+      <div className="editor-description-bar">
+        <textarea
+          className="editor-description-input"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Kurzbeschreibung der Übung"
+          rows={2}
+        />
+      </div>
+
       <Toolbar activeTool={activeTool} onToolClick={handleToolClick} />
 
       <div className="editor-haupt-zeile">

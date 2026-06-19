@@ -21,6 +21,8 @@ services:
       - ./backend/.env
     depends_on:
       - db
+    ports:
+      - "4000:4000"	
     networks:
       - sve-trainer-net
     labels:
@@ -34,6 +36,8 @@ services:
     build: ./frontend
     container_name: sve-trainer-frontend
     restart: unless-stopped
+    ports:
+      - "8080:80"
     networks:
       - sve-trainer-net
     labels:

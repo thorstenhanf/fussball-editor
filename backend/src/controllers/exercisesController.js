@@ -74,7 +74,7 @@ export async function createExercise(req, res) {
     const { rows } = await client.query(
       `INSERT INTO exercises
         (title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, created_by)
-       VALUES ($1, $2, $3, $4, COALESCE($5, 'vollfeld_hoch'), COALESCE($6, '{"objects": [], "keyframes": []}'), $7, $8)
+       VALUES ($1, $2, $3, $4, COALESCE($5, 'vollfeld_hoch'), COALESCE($6::jsonb, '{"objects": [], "keyframes": []}'::jsonb), $7, $8)
        RETURNING *`,
       [title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, req.user.id]
     );
@@ -110,7 +110,7 @@ export async function updateExercise(req, res) {
        age_group = COALESCE($3, age_group),
        duration_minutes = COALESCE($4, duration_minutes),
        field_template = COALESCE($5, field_template),
-       choreography = COALESCE($6, choreography),
+       choreography = COALESCE($6::jsonb, choreography),
        thumbnail_key = COALESCE($7, thumbnail_key)
      WHERE id = $8
      RETURNING *`,

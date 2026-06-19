@@ -91,6 +91,89 @@ body {
   min-height: 0;
 }
 
+.editor-document-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.editor-document-fields {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-document-title,
+.editor-document-meta,
+.editor-description-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+}
+
+.editor-document-title {
+  flex: 1;
+  min-width: 180px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.editor-document-meta {
+  width: 140px;
+  padding: 10px 12px;
+}
+
+.editor-document-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-save-state {
+  font-size: 13px;
+  color: #166534;
+}
+
+.editor-save-state-error {
+  color: #b91c1c;
+}
+
+.editor-save-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #14532d;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-save-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.editor-description-bar {
+  padding: 10px 16px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.editor-description-input {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+}
+
 .toolbar {
   display: flex;
   flex-direction: row;
