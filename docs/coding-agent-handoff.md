@@ -126,6 +126,34 @@ Editor:
 - Das lokale Backend speichert `choreography` in Postgres als `jsonb`
 - Externe Suchtreffer und lokale Übungen nutzen unterschiedliche Ursprungsmodelle, werden aber vor dem Editor beide auf `ExerciseTemplate` vereinheitlicht
 
+## Lokale URLs und Env
+
+- Frontend lokal:
+  - `http://localhost:5173`
+  - alternativ `http://127.0.0.1:5173`
+- Docker-Frontend lokal:
+  - `http://localhost:8080`
+- Backend lokal:
+  - `http://localhost:4000`
+- Externe Such-API:
+  - `https://b5zb58pdy4.execute-api.eu-north-1.amazonaws.com/prod/search`
+
+Wichtige Frontend-Variablen:
+
+- `VITE_API_BASE_URL`
+  - optional
+  - wenn nicht gesetzt, faellt das Frontend aktuell auf `http://localhost:4000` zurueck
+- `VITE_THUMBNAIL_BASE_URL`
+  - optional, aber wichtig fuer echte Thumbnail-Keys aus der Such-API
+  - wird genutzt, wenn `thumbnail_key` kein vollstaendiger URL ist
+
+Wichtige Backend-Annahme:
+
+- CORS wurde fuer die lokale Entwicklung explizit auf diese Origins erweitert:
+  - `http://localhost:5173`
+  - `http://127.0.0.1:5173`
+  - `http://localhost:8080`
+
 ## Gute nächste Schritte
 
 - Login-Seite bauen
