@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const FALLBACK_CONTENT_TYPE_BY_EXTENSION = {
   '.pdf': 'application/pdf',
   '.png': 'image/png',

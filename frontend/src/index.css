@@ -990,6 +990,38 @@ body {
   color: #64748b;
 }
 
+.exercise-chip-extern {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.library-section {
+  margin-top: 2.5rem;
+}
+
+.library-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.library-section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  min-width: 1.5rem;
+}
+
 @media (max-width: 900px) {
   .app-header {
     flex-direction: column;
