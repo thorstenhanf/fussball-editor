@@ -3,10 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapSearchResultToExerciseTemplate } from '../lib/exerciseTemplate';
 
 const EXERCISE_SEARCH_API = 'https://b5zb58pdy4.execute-api.eu-north-1.amazonaws.com/prod/search';
-const MANUAL_THUMBNAIL_KEYS = {
-  'testumschalten1.pdf': 'thumbnails/demo/testumschalten1-page-1.svg',
-  'testumschalten4.pdf': 'thumbnails/demo/testumschalten1-page-1.svg',
-};
+const THUMBNAIL_BASE_URL = (import.meta.env.VITE_THUMBNAIL_BASE_URL || '').replace(/\/$/, '');
 
 function formatPlayerCount(min, max) {
   if (Number.isFinite(min) && Number.isFinite(max)) {
@@ -24,18 +21,18 @@ function normalizeResults(payload) {
 }
 
 function getThumbnailUrl(exercise) {
-  const thumbnailKey =
-    exercise.thumbnail_key ??
-    MANUAL_THUMBNAIL_KEYS[exercise.source_key] ??
-    MANUAL_THUMBNAIL_KEYS[exercise.exercise_id] ??
-    '';
+  const thumbnailKey = exercise.thumbnail_key ?? '';
 
   if (!thumbnailKey) return '';
   if (thumbnailKey.startsWith('http://') || thumbnailKey.startsWith('https://') || thumbnailKey.startsWith('/')) {
     return thumbnailKey;
   }
 
-  return `/${thumbnailKey}`;
+  if (!THUMBNAIL_BASE_URL) {
+    return '';
+  }
+
+  return `${THUMBNAIL_BASE_URL}/${thumbnailKey.replace(/^\//, '')}`;
 }
 
 export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
@@ -172,13 +169,17 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
       <div className="library-grid">
         {results.map((exercise) => (
           <article className="exercise-card" key={exercise.exercise_id ?? exercise.source_key ?? exercise.title}>
-            {getThumbnailUrl(exercise) && (
+            {getThumbnailUrl(exercise) ? (
               <div className="exercise-card-thumbnail">
                 <img
                   src={getThumbnailUrl(exercise)}
                   alt={`Vorschau für ${exercise.title || 'Übung'}`}
                   loading="lazy"
                 />
+              </div>
+            ) : (
+              <div className="exercise-card-thumbnail exercise-card-thumbnail-placeholder" aria-hidden="true">
+                <span>Keine Vorschau</span>
               </div>
             )}
 
