@@ -35,8 +35,21 @@ body {
 
 .app-brand {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-brand-logo {
+  height: 56px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.app-brand-text {
+  display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .app-brand h1 {

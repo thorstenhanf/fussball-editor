@@ -97,8 +97,11 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-brand">
-          <span className="app-brand-kicker">Trainer-Tool</span>
-          <h1>Fussball Editor</h1>
+          <img src="/favicon.png" alt="Das Trainertool" className="app-brand-logo" />
+          <div className="app-brand-text">
+            <span className="app-brand-kicker">Trainer-Tool</span>
+            <h1>Fussball Editor</h1>
+          </div>
         </div>
 
         <nav className="app-nav" aria-label="Hauptnavigation">
