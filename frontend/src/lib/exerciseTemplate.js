@@ -115,3 +115,28 @@ export function mapSearchResultToExerciseTemplate(searchResult = {}) {
     choreography: createEmptyChoreography(),
   });
 }
+
+export function mapStoredExerciseToExerciseTemplate(exercise = {}) {
+  return createExerciseTemplate({
+    id: exercise.id ?? null,
+    source: {
+      type: 'local-backend',
+      externalId: exercise.id ?? null,
+      sourceKey: exercise.id ?? null,
+      importedAt: exercise.updated_at ?? exercise.created_at ?? null,
+    },
+    meta: {
+      title: exercise.title ?? '',
+      description: exercise.description ?? '',
+      summary: exercise.description ?? '',
+      ageGroups: exercise.age_group ? [exercise.age_group] : [],
+      durationMinutes: Number.isFinite(exercise.duration_minutes) ? exercise.duration_minutes : null,
+      thumbnailKey: exercise.thumbnail_key ?? '',
+      thumbnailUrl: exercise.thumbnail_url ?? '',
+    },
+    editor: {
+      fieldTemplate: exercise.field_template ?? 'vollfeld_hoch',
+    },
+    choreography: exercise.choreography ?? createEmptyChoreography(),
+  });
+}

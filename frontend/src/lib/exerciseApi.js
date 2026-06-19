@@ -43,3 +43,9 @@ export function updateExercise(id, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function listExercises() {
+  return request('/api/exercises', {
+    method: 'GET',
+  });
+}

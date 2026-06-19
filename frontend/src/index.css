@@ -746,6 +746,12 @@ body {
   background: #166534;
 }
 
+.my-exercise-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .exercise-chip {
   padding: 7px 10px;
   border-radius: 999px;

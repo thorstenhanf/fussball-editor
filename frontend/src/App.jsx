@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import Editor from './components/editor/Editor';
 import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
+import MyExercisesPage from './pages/MyExercisesPage';
 
 function navClassName({ isActive }) {
   return `app-nav-link${isActive ? ' active' : ''}`;
@@ -22,6 +23,9 @@ export default function App() {
           <NavLink to="/editor" className={navClassName}>
             Editor
           </NavLink>
+          <NavLink to="/meine-uebungen" className={navClassName}>
+            Meine Übungen
+          </NavLink>
           <NavLink to="/uebungsbibliothek" className={navClassName}>
             Übungsbibliothek
           </NavLink>
@@ -32,6 +36,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/editor" replace />} />
           <Route path="/editor" element={<Editor initialTemplate={currentEditorTemplate} />} />
+          <Route
+            path="/meine-uebungen"
+            element={<MyExercisesPage onOpenInEditor={setCurrentEditorTemplate} />}
+          />
           <Route
             path="/uebungsbibliothek"
             element={<ExerciseLibraryPage onOpenInEditor={setCurrentEditorTemplate} />}

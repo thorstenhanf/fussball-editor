@@ -29,7 +29,7 @@ export async function listExercises(req, res) {
     `
     SELECT
       e.id, e.title, e.description, e.age_group, e.duration_minutes,
-      e.field_template, e.thumbnail_url, e.thumbnail_key, e.share_enabled, e.share_token,
+      e.field_template, e.choreography, e.thumbnail_url, e.thumbnail_key, e.share_enabled, e.share_token,
       e.export_status, e.export_url, e.created_at, e.updated_at,
       u.display_name AS created_by_name,
       COALESCE(
