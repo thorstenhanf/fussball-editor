@@ -10,7 +10,28 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:8080',
+  process.env.FRONTEND_URL,
+].filter(Boolean));
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Requests ohne Origin (z. B. curl/healthchecks) weiterhin erlauben.
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS: Origin nicht erlaubt.'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '5mb' })); // Choreografie-JSON kann größer werden
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));

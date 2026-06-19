@@ -1,8 +1,51 @@
+import { useState } from 'react';
+import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import Editor from './components/editor/Editor';
+import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
+import MyExercisesPage from './pages/MyExercisesPage';
 
-// Vorerst lädt App direkt den Editor, damit das Grundgerüst sofort
-// visuell testbar ist. Routing (Login, Bibliothek, Detailansicht,
-// Share-Seite) kommt im nächsten Schritt über react-router-dom hinzu.
+function navClassName({ isActive }) {
+  return `app-nav-link${isActive ? ' active' : ''}`;
+}
+
 export default function App() {
-  return <Editor />;
+  const [currentEditorTemplate, setCurrentEditorTemplate] = useState(null);
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="app-brand">
+          <span className="app-brand-kicker">Trainer-Tool</span>
+          <h1>Fussball Editor</h1>
+        </div>
+
+        <nav className="app-nav" aria-label="Hauptnavigation">
+          <NavLink to="/editor" className={navClassName}>
+            Editor
+          </NavLink>
+          <NavLink to="/meine-uebungen" className={navClassName}>
+            Meine Übungen
+          </NavLink>
+          <NavLink to="/uebungsbibliothek" className={navClassName}>
+            Übungsbibliothek
+          </NavLink>
+        </nav>
+      </header>
+
+      <main className="app-main">
+        <Routes>
+          <Route path="/" element={<Navigate to="/editor" replace />} />
+          <Route path="/editor" element={<Editor initialTemplate={currentEditorTemplate} />} />
+          <Route
+            path="/meine-uebungen"
+            element={<MyExercisesPage onOpenInEditor={setCurrentEditorTemplate} />}
+          />
+          <Route
+            path="/uebungsbibliothek"
+            element={<ExerciseLibraryPage onOpenInEditor={setCurrentEditorTemplate} />}
+          />
+        </Routes>
+      </main>
+    </div>
+  );
 }
