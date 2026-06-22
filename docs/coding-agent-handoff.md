@@ -171,6 +171,8 @@ Es gibt aktuell zwei Thumbnail-Pfade:
 - kommen aus der AWS-Suche
 - nutzen `thumbnail_key` oder `thumbnail_url`
 - `thumbnail_key` wird im Frontend ueber `VITE_THUMBNAIL_BASE_URL` aufgeloest
+- Datumsanzeige in der Bibliothek funktioniert nur, wenn die Search API auch
+  `created_at` oder `updated_at` mitsendet
 
 ### Lokale/editorbasierte Übungen
 
@@ -255,6 +257,68 @@ Unter `768px`:
   - `Material`
 - Rest liegt unter `Mehr Werkzeuge`
 - das Zusatzmenue rendert als Block unterhalb der Toolbar, nicht als abgeschnittenes Overlay
+
+## Datumsanzeige in der Bibliothek
+
+Datei:
+
+- [frontend/src/pages/ExerciseLibraryPage.jsx](../frontend/src/pages/ExerciseLibraryPage.jsx)
+
+Regel:
+
+- pro Karte wird, falls vorhanden, ein Datum angezeigt
+- Prioritaet:
+  - `created_at`
+  - fallback `updated_at`
+- Format:
+  - `DD.MM.YYYY, HH:mm`
+
+Wichtig:
+
+- lokale Übungen aus `GET /api/exercises` liefern diese Felder bereits
+- externe/importierte Übungen zeigen das Datum nur, wenn die AWS Search API die Felder mitsendet
+
+## Upload-Polling ohne neue Infrastruktur
+
+Datei:
+
+- [frontend/src/pages/PdfUploadPage.jsx](../frontend/src/pages/PdfUploadPage.jsx)
+
+Ziel:
+
+- nach einem presigned S3-Upload einen sichtbaren Importstatus liefern, ohne
+  neue Backend-Route, Queue oder Status-DB einzufuehren
+
+Flow:
+
+1. Datei wird per presigned `PUT` nach S3 hochgeladen
+2. Status wechselt auf `processing`
+3. danach startet ein Polling gegen die bestehende Search API
+4. Polling prueft pragmatisch mit:
+   - `objectKey`
+   - Dateiname
+   - Dateiname ohne Endung
+5. wenn ein passender Treffer erscheint:
+   - Status `imported`
+6. wenn nach 2 Minuten nichts gefunden wird:
+   - Status `timeout`
+
+Wichtige Statuscodes:
+
+- `ready`
+- `signing`
+- `uploading`
+- `processing`
+- `imported`
+- `timeout`
+- `error`
+
+Wichtig:
+
+- das ist bewusst nur eine pragmatische Such-Heuristik
+- am besten funktioniert es, wenn die Search API `source_key` oder einen
+  zum Dateinamen passenden Treffer liefert
+- laufende Polling-Timer werden beim Unmount sauber beendet
 
 ## Auth / Login
 

@@ -22,6 +22,8 @@ function normalizeResults(payload) {
 }
 
 function formatExerciseDate(exercise) {
+  // Externe/importierte Treffer und lokale Exercises nutzen aktuell
+  // dieselbe Anzeige-Regel: created_at bevorzugen, sonst updated_at.
   const rawValue = exercise.created_at ?? exercise.updated_at ?? exercise.createdAt ?? exercise.updatedAt ?? '';
   if (!rawValue) return '';
 
@@ -73,6 +75,8 @@ function normalizeLocalExercise(exercise) {
 }
 
 function normalizeExternalExercise(exercise) {
+  // Externe Suchtreffer bleiben bewusst flach. Die Bibliothek braucht hier
+  // nur genug Meta-Daten fuer Kartenansicht und Editor-Handoff.
   return {
     ...exercise,
     resultType: 'external',
@@ -161,6 +165,8 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
   };
 
   const handleOpenInEditor = (exercise) => {
+    // Lokale Übungen bringen bereits eine persistierte choreography mit.
+    // Externe Treffer werden dagegen weiterhin nur als Vorlage gemappt.
     const template = exercise.resultType === 'local'
       ? mapStoredExerciseToExerciseTemplate(exercise)
       : mapSearchResultToExerciseTemplate(exercise);

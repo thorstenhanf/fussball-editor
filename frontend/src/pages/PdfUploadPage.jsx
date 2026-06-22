@@ -49,6 +49,11 @@ function normalizeResults(payload) {
 }
 
 function matchesImportedExercise(result, entry) {
+  // Das Polling arbeitet absichtlich ohne neue Backend-Infrastruktur.
+  // Deshalb pruefen wir pragmatisch mehrere vorhandene Felder:
+  // - source_key / objectKey
+  // - Dateiname
+  // - Dateiname ohne Endung
   const resultSourceKey = result.source_key ?? '';
   const resultTitle = (result.title ?? '').toLowerCase();
   const fileName = entry.file.name.toLowerCase();
@@ -75,6 +80,8 @@ async function searchImportedExercise(query) {
 export default function PdfUploadPage() {
   const [uploads, setUploads] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  // Pro Upload laeuft maximal ein aktiver Timer. Beim Unmount werden alle
+  // Polling-Timer sauber beendet, damit keine spaeten State-Updates mehr kommen.
   const pollingTimeoutsRef = useRef(new Map());
 
   const validUploads = useMemo(
@@ -101,6 +108,8 @@ export default function PdfUploadPage() {
   const schedulePoll = (entry, startedAt = Date.now()) => {
     const poll = async () => {
       try {
+        // Wir nutzen bewusst die bestehende Search API als "Importstatus",
+        // statt eine separate Status-API einzufuehren.
         const queryCandidates = [entry.objectKey, entry.file.name, entry.filenameStem].filter(Boolean);
 
         for (const query of queryCandidates) {
@@ -175,6 +184,8 @@ export default function PdfUploadPage() {
           message: presign.objectKey,
         });
 
+        // Erst nach erfolgreichem S3-PUT startet das Polling. Davor gibt es
+        // fuer die Import-Pipeline noch nichts, was in der Suche auftauchen koennte.
         schedulePoll({
           ...entry,
           objectKey: presign.objectKey,
