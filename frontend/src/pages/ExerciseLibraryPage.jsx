@@ -1,7 +1,88 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { deleteExercise, listExercisesFiltered } from '../lib/exerciseApi';
-import { mapStoredExerciseToExerciseTemplate } from '../lib/exerciseTemplate';
+import { mapSearchResultToExerciseTemplate, mapStoredExerciseToExerciseTemplate } from '../lib/exerciseTemplate';
+
+const EXERCISE_SEARCH_API = 'https://b5zb58pdy4.execute-api.eu-north-1.amazonaws.com/prod/search';
+const THUMBNAIL_BASE_URL = (import.meta.env.VITE_THUMBNAIL_BASE_URL || '').replace(/\/$/, '');
+
+function formatPlayerCount(min, max) {
+  if (Number.isFinite(min) && Number.isFinite(max)) {
+    return min === max ? `${min} Spieler` : `${min}-${max} Spieler`;
+  }
+  if (Number.isFinite(min)) return `Ab ${min} Spielern`;
+  if (Number.isFinite(max)) return `Bis ${max} Spieler`;
+  return 'Keine Angabe';
+}
+
+function normalizeResults(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+}
+
+function formatExerciseDate(exercise) {
+  // Externe/importierte Treffer und lokale Exercises nutzen aktuell
+  // dieselbe Anzeige-Regel: created_at bevorzugen, sonst updated_at.
+  const rawValue = exercise.created_at ?? exercise.updated_at ?? exercise.createdAt ?? exercise.updatedAt ?? '';
+  if (!rawValue) return '';
+
+  const date = new Date(rawValue);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function getThumbnailUrl(exercise) {
+  const directThumbnailUrl = exercise.thumbnail_url ?? exercise.thumbnailUrl ?? '';
+  const thumbnailKey = exercise.thumbnail_key ?? exercise.thumbnailKey ?? '';
+
+  if (directThumbnailUrl) return directThumbnailUrl;
+  if (!thumbnailKey) return '';
+  if (thumbnailKey.startsWith('http://') || thumbnailKey.startsWith('https://') || thumbnailKey.startsWith('/')) {
+    return thumbnailKey;
+  }
+
+  if (!THUMBNAIL_BASE_URL) {
+    return '';
+  }
+
+  return `${THUMBNAIL_BASE_URL}/${thumbnailKey.replace(/^\//, '')}`;
+}
+
+function normalizeLocalExercise(exercise) {
+  const focus = Array.isArray(exercise.focus)
+    ? exercise.focus
+    : Array.isArray(exercise.choreography?.meta?.focus)
+    ? exercise.choreography.meta.focus
+    : [];
+
+  return {
+    ...exercise,
+    resultType: 'local',
+    sourceLabel: 'Eigene Übung',
+    summary: exercise.description ?? '',
+    focus,
+    players_min: null,
+    players_max: null,
+  };
+}
+
+function normalizeExternalExercise(exercise) {
+  // Externe Suchtreffer bleiben bewusst flach. Die Bibliothek braucht hier
+  // nur genug Meta-Daten fuer Kartenansicht und Editor-Handoff.
+  return {
+    ...exercise,
+    resultType: 'external',
+    sourceLabel: 'Importiert',
+  };
+}
 
 export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
   const navigate = useNavigate();
@@ -42,7 +123,12 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
   };
 
   const handleOpenInEditor = (exercise) => {
-    const template = mapStoredExerciseToExerciseTemplate(exercise);
+    // Lokale Übungen bringen bereits eine persistierte choreography mit.
+    // Externe Treffer werden dagegen weiterhin nur als Vorlage gemappt.
+    const template = exercise.resultType === 'local'
+      ? mapStoredExerciseToExerciseTemplate(exercise)
+      : mapSearchResultToExerciseTemplate(exercise);
+
     onOpenInEditor(template);
     navigate('/editor');
   };
@@ -197,6 +283,88 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
           </div>
         </>
       )}
+
+      {results.length > 0 && (
+        <div className="library-results-meta">
+          {results.length} Treffer für <strong>{initialQuery}</strong>
+        </div>
+      )}
+
+      <div className="library-grid">
+        {results.map((exercise) => (
+          <article className="exercise-card" key={exercise.exercise_id ?? exercise.source_key ?? exercise.title}>
+            {getThumbnailUrl(exercise) ? (
+              <div className={`exercise-card-thumbnail${exercise.resultType === 'local' ? ' exercise-card-thumbnail-portrait' : ''}`}>
+                <img
+                  src={getThumbnailUrl(exercise)}
+                  alt={`Vorschau für ${exercise.title || 'Übung'}`}
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div
+                className={`exercise-card-thumbnail exercise-card-thumbnail-placeholder${exercise.resultType === 'local' ? ' exercise-card-thumbnail-portrait' : ''}`}
+                aria-hidden="true"
+              >
+                <span>Keine Vorschau</span>
+              </div>
+            )}
+
+            <div className="exercise-card-header">
+              <h3>{exercise.title || 'Unbenannte Übung'}</h3>
+              <div className="my-exercise-meta-row">
+                <span className="exercise-card-players">
+                  {exercise.resultType === 'local'
+                    ? (exercise.age_group || 'Eigene Übung')
+                    : formatPlayerCount(exercise.players_min, exercise.players_max)}
+                </span>
+                <span className="exercise-chip exercise-chip-muted">{exercise.sourceLabel}</span>
+              </div>
+              {formatExerciseDate(exercise) && (
+                <div className="exercise-card-date">
+                  {formatExerciseDate(exercise)}
+                </div>
+              )}
+            </div>
+
+            <p className="exercise-card-summary">
+              {exercise.summary || 'Für diese Übung liegt keine Zusammenfassung vor.'}
+            </p>
+
+            <div className="exercise-card-focus">
+              {(exercise.focus ?? []).length > 0 ? (
+                exercise.focus.map((item) => (
+                  <span className="exercise-chip" key={item}>
+                    {item}
+                  </span>
+                ))
+              ) : (
+                <span className="exercise-chip exercise-chip-muted">Keine Schwerpunkte</span>
+              )}
+            </div>
+
+            <div className="exercise-card-actions">
+              <button
+                className="exercise-card-action"
+                type="button"
+                onClick={() => handleOpenInEditor(exercise)}
+              >
+                Im Editor öffnen
+              </button>
+              {exercise.resultType === 'local' && (
+                <button
+                  className="exercise-card-action exercise-card-action-danger"
+                  type="button"
+                  onClick={() => handleDelete(exercise)}
+                  disabled={deletingId === exercise.id}
+                >
+                  {deletingId === exercise.id ? 'Löscht...' : 'Löschen'}
+                </button>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
