@@ -18,6 +18,7 @@ function formatPlayerCount(min, max) {
 function normalizeResults(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
   return [];
 }
 
@@ -283,88 +284,6 @@ export default function ExerciseLibraryPage({ onOpenInEditor = () => {} }) {
           </div>
         </>
       )}
-
-      {results.length > 0 && (
-        <div className="library-results-meta">
-          {results.length} Treffer für <strong>{initialQuery}</strong>
-        </div>
-      )}
-
-      <div className="library-grid">
-        {results.map((exercise) => (
-          <article className="exercise-card" key={exercise.exercise_id ?? exercise.source_key ?? exercise.title}>
-            {getThumbnailUrl(exercise) ? (
-              <div className={`exercise-card-thumbnail${exercise.resultType === 'local' ? ' exercise-card-thumbnail-portrait' : ''}`}>
-                <img
-                  src={getThumbnailUrl(exercise)}
-                  alt={`Vorschau für ${exercise.title || 'Übung'}`}
-                  loading="lazy"
-                />
-              </div>
-            ) : (
-              <div
-                className={`exercise-card-thumbnail exercise-card-thumbnail-placeholder${exercise.resultType === 'local' ? ' exercise-card-thumbnail-portrait' : ''}`}
-                aria-hidden="true"
-              >
-                <span>Keine Vorschau</span>
-              </div>
-            )}
-
-            <div className="exercise-card-header">
-              <h3>{exercise.title || 'Unbenannte Übung'}</h3>
-              <div className="my-exercise-meta-row">
-                <span className="exercise-card-players">
-                  {exercise.resultType === 'local'
-                    ? (exercise.age_group || 'Eigene Übung')
-                    : formatPlayerCount(exercise.players_min, exercise.players_max)}
-                </span>
-                <span className="exercise-chip exercise-chip-muted">{exercise.sourceLabel}</span>
-              </div>
-              {formatExerciseDate(exercise) && (
-                <div className="exercise-card-date">
-                  {formatExerciseDate(exercise)}
-                </div>
-              )}
-            </div>
-
-            <p className="exercise-card-summary">
-              {exercise.summary || 'Für diese Übung liegt keine Zusammenfassung vor.'}
-            </p>
-
-            <div className="exercise-card-focus">
-              {(exercise.focus ?? []).length > 0 ? (
-                exercise.focus.map((item) => (
-                  <span className="exercise-chip" key={item}>
-                    {item}
-                  </span>
-                ))
-              ) : (
-                <span className="exercise-chip exercise-chip-muted">Keine Schwerpunkte</span>
-              )}
-            </div>
-
-            <div className="exercise-card-actions">
-              <button
-                className="exercise-card-action"
-                type="button"
-                onClick={() => handleOpenInEditor(exercise)}
-              >
-                Im Editor öffnen
-              </button>
-              {exercise.resultType === 'local' && (
-                <button
-                  className="exercise-card-action exercise-card-action-danger"
-                  type="button"
-                  onClick={() => handleDelete(exercise)}
-                  disabled={deletingId === exercise.id}
-                >
-                  {deletingId === exercise.id ? 'Löscht...' : 'Löschen'}
-                </button>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
     </section>
   );
 }
