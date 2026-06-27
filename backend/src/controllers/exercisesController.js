@@ -33,7 +33,7 @@ export async function listExercises(req, res) {
     `
     SELECT
       e.id, e.title, e.description, e.age_group, e.duration_minutes,
-      e.field_template, e.choreography, e.thumbnail_url, e.thumbnail_key, e.share_enabled, e.share_token,
+      e.field_template, e.choreography, e.thumbnail_url, e.thumbnail_key, e.source, e.share_enabled, e.share_token,
       e.export_status, e.export_url, e.created_at, e.updated_at,
       u.display_name AS created_by_name,
       COALESCE(
@@ -65,7 +65,7 @@ export async function getExercise(req, res) {
 }
 
 export async function createExercise(req, res) {
-  const { title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, category_ids } = req.body;
+  const { title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, category_ids, source } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Titel ist erforderlich.' });
@@ -77,10 +77,10 @@ export async function createExercise(req, res) {
 
     const { rows } = await client.query(
       `INSERT INTO exercises
-        (title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, created_by)
-       VALUES ($1, $2, $3, $4, COALESCE($5, 'vollfeld_hoch'), COALESCE($6::jsonb, '{"objects": [], "keyframes": []}'::jsonb), $7, $8, $9)
+        (title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, source, created_by)
+       VALUES ($1, $2, $3, $4, COALESCE($5, 'vollfeld_hoch'), COALESCE($6::jsonb, '{"objects": [], "keyframes": []}'::jsonb), $7, $8, COALESCE($9, 'local'), $10)
        RETURNING *`,
-      [title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, req.user.id]
+      [title, description, age_group, duration_minutes, field_template, choreography, thumbnail_key, thumbnail_url, source, req.user.id]
     );
 
     const exercise = rows[0];

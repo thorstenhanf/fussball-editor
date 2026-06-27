@@ -5,12 +5,14 @@ import { requireAuth } from '../middleware/auth.js';
 const router = Router();
 router.use(requireAuth);
 
-router.get('/', async (_req, res) => {
+const ac = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+router.get('/', ac(async (_req, res) => {
   const { rows } = await pool.query('SELECT * FROM categories ORDER BY name');
   res.json(rows);
-});
+}));
 
-router.post('/', async (req, res) => {
+router.post('/', ac(async (req, res) => {
   const { name, color } = req.body;
   if (!name) return res.status(400).json({ error: 'Name ist erforderlich.' });
 
@@ -19,6 +21,6 @@ router.post('/', async (req, res) => {
     [name, color, '#2563eb']
   );
   res.status(201).json(rows[0]);
-});
+}));
 
 export default router;

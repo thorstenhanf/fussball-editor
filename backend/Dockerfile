@@ -9,4 +9,6 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["node", "src/server.js"]
+# Migrationen laufen zuerst. Bei Fehler wird gewarnt, der Server startet trotzdem –
+# so ist der Container immer erreichbar und liefert JSON-Fehler statt nginx-502.
+CMD ["sh", "-c", "node src/db/migrate.js || echo 'WARNUNG: Migration fehlgeschlagen, bitte manuell prüfen'; node src/server.js"]
