@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapSearchResultToExerciseTemplate } from '../lib/exerciseTemplate';
-import { searchExercises } from '../lib/exerciseSearchApi';
-
-const THUMBNAIL_BASE_URL = (import.meta.env.VITE_THUMBNAIL_BASE_URL || '').replace(/\/$/, '');
+import { resolveSearchAssetUrl, searchExercises } from '../lib/exerciseSearchApi';
 
 function formatPlayerCount(min, max) {
   if (Number.isFinite(min) && Number.isFinite(max)) {
@@ -33,20 +31,7 @@ function formatExerciseDate(exercise) {
 }
 
 function getThumbnailUrl(exercise) {
-  const directThumbnailUrl = exercise.thumbnail_url ?? exercise.thumbnailUrl ?? '';
-  const thumbnailKey = exercise.thumbnail_key ?? exercise.thumbnailKey ?? '';
-
-  if (directThumbnailUrl) return directThumbnailUrl;
-  if (!thumbnailKey) return '';
-  if (thumbnailKey.startsWith('http://') || thumbnailKey.startsWith('https://') || thumbnailKey.startsWith('/')) {
-    return thumbnailKey;
-  }
-
-  if (!THUMBNAIL_BASE_URL) {
-    return '';
-  }
-
-  return `${THUMBNAIL_BASE_URL}/${thumbnailKey.replace(/^\//, '')}`;
+  return resolveSearchAssetUrl(exercise);
 }
 
 function normalizeExternalExercise(exercise) {
