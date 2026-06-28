@@ -1,3 +1,5 @@
+import { resolveSearchAssetUrl } from './exerciseSearchApi';
+
 function makeKeyframeId() {
   return `kf_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -24,10 +26,15 @@ function normalizeChoreography(value) {
   // - keyframes immer mindestens ein Frame
   return {
     objects: Array.isArray(value.objects) ? value.objects : [],
-    keyframes:
-      Array.isArray(value.keyframes) && value.keyframes.length > 0
-        ? value.keyframes
-        : createEmptyChoreography().keyframes,
+    keyframes: Array.isArray(value.keyframes) && value.keyframes.length > 0
+      ? value.keyframes.map((keyframe) => ({
+          id: keyframe?.id ?? makeKeyframeId(),
+          positions:
+            keyframe && typeof keyframe.positions === 'object' && keyframe.positions !== null
+              ? keyframe.positions
+              : {},
+        }))
+      : createEmptyChoreography().keyframes,
   };
 }
 
@@ -46,6 +53,34 @@ function inferFieldTemplate(_searchResult) {
   // Bis eine belastbare Zuordnung existiert, starten importierte Templates
   // immer mit dem internen Standardfeld.
   return 'vollfeld_hoch';
+}
+
+function normalizeNumber(value) {
+  return Number.isFinite(value) ? value : null;
+}
+
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseChoreographyDraft(value) {
+  if (!value) {
+    return createEmptyChoreography();
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return createEmptyChoreography();
+    }
+  }
+
+  if (typeof value === 'object') {
+    return value;
+  }
+
+  return createEmptyChoreography();
 }
 
 /**
@@ -122,24 +157,24 @@ export function mapSearchResultToExerciseTemplate(searchResult = {}) {
       importedAt: new Date().toISOString(),
     },
     meta: {
-      title: searchResult.title ?? '',
-      description: searchResult.description ?? searchResult.summary ?? '',
-      summary: searchResult.summary ?? '',
+      title: normalizeString(searchResult.title),
+      description: normalizeString(searchResult.description ?? searchResult.summary),
+      summary: normalizeString(searchResult.summary ?? searchResult.description),
       createdAt: searchResult.created_at ?? null,
       updatedAt: searchResult.updated_at ?? null,
-      ageGroups: normalizeArray(searchResult.age_groups),
-      playersMin: Number.isFinite(searchResult.players_min) ? searchResult.players_min : null,
-      playersMax: Number.isFinite(searchResult.players_max) ? searchResult.players_max : null,
-      durationMinutes: Number.isFinite(searchResult.duration_minutes) ? searchResult.duration_minutes : null,
+      ageGroups: normalizeArray(searchResult.age_groups ?? searchResult.ageGroups),
+      playersMin: normalizeNumber(searchResult.players_min ?? searchResult.playersMin),
+      playersMax: normalizeNumber(searchResult.players_max ?? searchResult.playersMax),
+      durationMinutes: normalizeNumber(searchResult.duration_minutes ?? searchResult.durationMinutes),
       focus: normalizeArray(searchResult.focus),
-      fieldSizeLabel: searchResult.field_size ?? '',
-      thumbnailKey: searchResult.thumbnail_key ?? '',
-      thumbnailUrl: searchResult.thumbnail_url ?? '',
+      fieldSizeLabel: normalizeString(searchResult.field_size ?? searchResult.fieldSizeLabel),
+      thumbnailKey: normalizeString(searchResult.thumbnail_key ?? searchResult.thumbnailKey),
+      thumbnailUrl: resolveSearchAssetUrl(searchResult),
     },
     editor: {
       fieldTemplate: inferFieldTemplate(searchResult),
     },
-    choreography: searchResult.choreography_draft ?? createEmptyChoreography(),
+    choreography: parseChoreographyDraft(searchResult.choreography_draft ?? searchResult.choreographyDraft),
   });
 }
 
